@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,8 +13,10 @@ public class World : MonoBehaviour
     public GameObject chunkPrefab;
 
     public TerrainGenerator terrainGenerator;
-    private Vector2Int mapSeedOffset;
-    public int worldSeed;
+    public Vector2Int mapSeedOffset;
+
+    //public Dictionary<Vector3Int, ChunkData> chunkDataDictionary = new Dictionary<Vector3Int, ChunkData>();
+    //public Dictionary<Vector3Int, ChunkRenderer> chunkDictionary = new Dictionary<Vector3Int, ChunkRenderer>();
 
     public UnityEvent OnWorldCreated, OnNewChunksGenerated;
 
@@ -21,7 +24,6 @@ public class World : MonoBehaviour
 
     private void Awake()
     {
-        mapSeedOffset = new(worldSeed/2,worldSeed/3);
         worldData = new WorldData
         {
             chunkHeight = this.chunkHeight,
@@ -30,7 +32,7 @@ public class World : MonoBehaviour
             chunkDictionary = new Dictionary<Vector3Int, ChunkRenderer>()
         };
     }
-    private void Start() => GenerateWorld();
+
     public void GenerateWorld()
     {
         GenerateWorld(Vector3Int.zero);
@@ -38,7 +40,6 @@ public class World : MonoBehaviour
 
     private void GenerateWorld(Vector3Int position)
     {
-
         WorldGenerationData worldGenerationData = GetPositionsThatPlayerSees(position);
 
         foreach (Vector3Int pos in worldGenerationData.chunkPositionsToRemove)
@@ -67,14 +68,8 @@ public class World : MonoBehaviour
             worldData.chunkDictionary.Add(data.worldPosition, chunkRenderer);
             chunkRenderer.InitializeChunk(data);
             chunkRenderer.UpdateChunk(meshData);
-
         }
-
         OnWorldCreated?.Invoke();
-    }
-    IEnumerator GenerateWorldRoutine()
-    {
-        yield return new WaitForEndOfFrame();
     }
 
     internal bool SetBlock(RaycastHit hit, BlockType blockType)
@@ -85,9 +80,7 @@ public class World : MonoBehaviour
 
         Vector3Int pos = GetBlockPos(hit);
 
-        
-
-        WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, CheckForGravityBlockFill(chunk.ChunkData.worldReference,pos));
+        WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
         chunk.ModifiedByThePlayer = true;
 
         if (Chunk.IsOnEdge(chunk.ChunkData, pos))
@@ -95,37 +88,18 @@ public class World : MonoBehaviour
             List<ChunkData> neighbourDataList = Chunk.GetEdgeNeighbourChunk(chunk.ChunkData, pos);
             foreach (ChunkData neighbourData in neighbourDataList)
             {
+                //neighbourData.modifiedByThePlayer = true;
                 ChunkRenderer chunkToUpdate = WorldDataHelper.GetChunk(neighbourData.worldReference, neighbourData.worldPosition);
                 if (chunkToUpdate != null)
                     chunkToUpdate.UpdateChunk();
             }
+
         }
+
         chunk.UpdateChunk();
         return true;
     }
-    public BlockType CheckForGravityBlockFill(World world, Vector3Int pos)
-    {
-        ChunkData chunkData = WorldDataHelper.GetChunkData(world, pos);
-        if (chunkData != null)
-        {
-            Vector3Int localBlockPosition = Chunk.GetBlockPosInChunkCoordinates(chunkData, pos);
-            BlockType aboveBlockType = Chunk.GetBlockFromChunkCoordinates(chunkData, localBlockPosition + Vector3Int.up);
-            BlockType rightBlockType = Chunk.GetBlockFromChunkCoordinates(chunkData, localBlockPosition + Vector3Int.right);
-            BlockType leftBlockType = Chunk.GetBlockFromChunkCoordinates(chunkData, localBlockPosition + Vector3Int.left);
-            BlockType forewardBlockType = Chunk.GetBlockFromChunkCoordinates(chunkData, localBlockPosition + Vector3Int.forward);
-            BlockType backwardBlockType = Chunk.GetBlockFromChunkCoordinates(chunkData, localBlockPosition + Vector3Int.back);
-            if (
-                aboveBlockType == BlockType.Water ||
-                rightBlockType == BlockType.Water ||
-                leftBlockType == BlockType.Water ||
-                forewardBlockType == BlockType.Water ||
-                backwardBlockType == BlockType.Water)
-            {
-                return BlockType.Water;
-            }
-        }
-        return BlockType.Air;
-    }
+
     private Vector3Int GetBlockPos(RaycastHit hit)
     {
         Vector3 pos = new Vector3(
@@ -176,7 +150,7 @@ public class World : MonoBehaviour
 
     }
 
-    internal void LoadAdditionalChunksRequest(GameObject player)
+    public void LoadAdditionalChunksRequest(GameObject player)
     {
         GenerateWorld(Vector3Int.RoundToInt(player.transform.position));
         OnNewChunksGenerated?.Invoke();
@@ -191,7 +165,7 @@ public class World : MonoBehaviour
 
         if (containerChunk == null)
             return BlockType.Nothing;
-        Vector3Int blockInCHunkCoordinates = Chunk.GetBlockPosInChunkCoordinates(containerChunk, new Vector3Int(x, y, z));
+        Vector3Int blockInCHunkCoordinates = Chunk.GetBlockInChunkCoordinates(containerChunk, new Vector3Int(x, y, z));
         return Chunk.GetBlockFromChunkCoordinates(containerChunk, blockInCHunkCoordinates);
     }
 

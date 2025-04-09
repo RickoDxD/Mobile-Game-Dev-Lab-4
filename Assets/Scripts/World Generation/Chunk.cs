@@ -74,7 +74,7 @@ public static class Chunk
         return x + chunkData.chunkSize * y + chunkData.chunkSize * chunkData.chunkHeight * z;
     }
 
-    public static Vector3Int GetBlockPosInChunkCoordinates(ChunkData chunkData, Vector3Int pos)
+    public static Vector3Int GetBlockInChunkCoordinates(ChunkData chunkData, Vector3Int pos)
     {
         return new Vector3Int
         {
@@ -107,7 +107,7 @@ public static class Chunk
 
     internal static List<ChunkData> GetEdgeNeighbourChunk(ChunkData chunkData, Vector3Int worldPosition)
     {
-        Vector3Int chunkPosition = GetBlockPosInChunkCoordinates(chunkData, worldPosition);
+        Vector3Int chunkPosition = GetBlockInChunkCoordinates(chunkData, worldPosition);
         List<ChunkData> neighboursToUpdate = new List<ChunkData>();
         if (chunkPosition.x == 0)
         {
@@ -138,7 +138,7 @@ public static class Chunk
 
     internal static bool IsOnEdge(ChunkData chunkData, Vector3Int worldPosition)
     {
-        Vector3Int chunkPosition = GetBlockPosInChunkCoordinates(chunkData, worldPosition);
+        Vector3Int chunkPosition = GetBlockInChunkCoordinates(chunkData, worldPosition);
         if (
             chunkPosition.x == 0 || chunkPosition.x == chunkData.chunkSize - 1 ||
             chunkPosition.y == 0 || chunkPosition.y == chunkData.chunkHeight - 1 ||

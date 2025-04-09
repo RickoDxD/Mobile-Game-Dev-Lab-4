@@ -104,7 +104,7 @@ public static class WorldDataHelper
         ChunkData chunkData = GetChunkData(worldReference, pos);
         if (chunkData != null)
         {
-            Vector3Int localPosition = Chunk.GetBlockPosInChunkCoordinates(chunkData, pos);
+            Vector3Int localPosition = Chunk.GetBlockInChunkCoordinates(chunkData, pos);
             Chunk.SetBlock(chunkData, localPosition, blockType);
         }
     }

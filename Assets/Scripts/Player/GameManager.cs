@@ -15,7 +15,11 @@ public class GameManager : MonoBehaviour
 
     public float detectionTime = 1;
     public CinemachineVirtualCamera camera_VM;
-
+    private void Start()
+    {
+        world.GenerateWorld();
+        SpawnPlayer();
+    }
     public void SpawnPlayer()
     {
         if (player != null)
@@ -46,7 +50,7 @@ public class GameManager : MonoBehaviour
             (Mathf.Abs(currentPlayerChunkPosition.y - player.transform.position.y) > world.chunkHeight)
             )
         {
-            //world.LoadAdditionalChunksRequest(player);
+            world.LoadAdditionalChunksRequest(player);
 
         }
         else
