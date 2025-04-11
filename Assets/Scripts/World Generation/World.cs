@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using static UnityEditor.PlayerSettings;
+using static UnityEngine.Mesh;
 
 public class World : MonoBehaviour
 {
@@ -37,7 +39,6 @@ public class World : MonoBehaviour
     {
         GenerateWorld(Vector3Int.zero);
     }
-
     private void GenerateWorld(Vector3Int position)
     {
         WorldGenerationData worldGenerationData = GetPositionsThatPlayerSees(position);
@@ -58,18 +59,47 @@ public class World : MonoBehaviour
             ChunkData newData = terrainGenerator.GenerateChunkData(data, mapSeedOffset);
             worldData.chunkDataDictionary.Add(pos, newData);
         }
-
+        Dictionary<Vector3Int, MeshData> meshDataDictionary = new();
         foreach (var pos in worldGenerationData.chunkPositionsToCreate)
         {
             ChunkData data = worldData.chunkDataDictionary[pos];
             MeshData meshData = Chunk.GetChunkMeshData(data);
-            GameObject chunkObject = Instantiate(chunkPrefab, data.worldPosition, Quaternion.identity);
-            ChunkRenderer chunkRenderer = chunkObject.GetComponent<ChunkRenderer>();
-            worldData.chunkDictionary.Add(data.worldPosition, chunkRenderer);
-            chunkRenderer.InitializeChunk(data);
-            chunkRenderer.UpdateChunk(meshData);
+            if (!meshDataDictionary.ContainsKey(pos))
+            {
+                meshDataDictionary.TryAdd(pos, meshData);
+            }
+
+            //GameObject chunkObject = Instantiate(chunkPrefab, data.worldPosition, Quaternion.identity);
+            //ChunkRenderer chunkRenderer = chunkObject.GetComponent<ChunkRenderer>();
+            //worldData.chunkDictionary.Add(data.worldPosition, chunkRenderer);
+            //chunkRenderer.InitializeChunk(data);
+            //chunkRenderer.UpdateChunk(meshData);
+
         }
-        OnWorldCreated?.Invoke();
+        StartCoroutine(ChunkCreationCoroutine(meshDataDictionary));
+    }
+    bool IsWorldCreated;
+    private IEnumerator ChunkCreationCoroutine(Dictionary<Vector3Int, MeshData> meshDataDictionary)
+    {
+        foreach (var item in meshDataDictionary)
+        {
+            CreateChunk(worldData, item.Key, item.Value);
+            yield return new WaitForEndOfFrame();
+        }
+        if (IsWorldCreated == false)
+        {
+            IsWorldCreated = true;
+            OnWorldCreated?.Invoke();
+        }
+    }
+
+    private void CreateChunk(WorldData worldData, Vector3Int pos, MeshData meshData)
+    {
+        GameObject chunkObject = Instantiate(chunkPrefab, pos, Quaternion.identity);
+        ChunkRenderer chunkRenderer = chunkObject.GetComponent<ChunkRenderer>();
+        worldData.chunkDictionary.Add(pos, chunkRenderer);
+        chunkRenderer.InitializeChunk(worldData.chunkDataDictionary[pos]);
+        chunkRenderer.UpdateChunk(meshData);
     }
 
     internal bool SetBlock(RaycastHit hit, BlockType blockType)

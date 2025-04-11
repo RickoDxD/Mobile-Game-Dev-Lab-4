@@ -151,10 +151,10 @@ MonoBehaviour:
   mapSizeInChunks: 10
   chunkSize: 16
   chunkHeight: 100
-  chunkDrawingRange: 20
+  chunkDrawingRange: 6
   chunkPrefab: {fileID: 4443192061081385954, guid: 1c00b035e263f934a9711fcf71e3336a, type: 3}
   terrainGenerator: {fileID: 1985401114}
-  worldSeed: 0
+  mapSeedOffset: {x: 0, y: 0}
   OnWorldCreated:
     m_PersistentCalls:
       m_Calls:

@@ -18,8 +18,9 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         world.GenerateWorld();
-        SpawnPlayer();
+        world.OnWorldCreated.AddListener(SpawnPlayer);
     }
+
     public void SpawnPlayer()
     {
         if (player != null)
